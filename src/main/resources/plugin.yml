@@ -1,0 +1,11 @@
+name: RpgCombat
+version: '${version}'
+
+main: me.vark123.dsrpg.rpgCombat.RpgCombat
+api-version: '1.21.11'
+load: POSTWORLD
+
+depend:
+  - MythicMobs
+
+authors: [ Vark123 ]
