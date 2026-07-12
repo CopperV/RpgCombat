@@ -8,28 +8,28 @@ import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 
 public class EntityDamageListener implements Listener {
+
+    private static final String RPG_DATA_KEY = "rpg-damage-data";
 
     //Calculating
     @EventHandler(priority = EventPriority.HIGH)
     private void onDamage(EntityDamageEvent e) {
         if(e.isCancelled()) {
-            Bukkit.broadcast(Component.text("Cancelled"));
             return;
         }
 
-//        double finalDamage = CombatManager.calculateDamage(e);
         var data = CombatManager.calculateDamage(e);
+        var aVictim = BukkitAdapter.adapt(e.getEntity());
+
         if(data.getDamage() > 0){
             e.setDamage(data.getDamage());
-
-            var aVictim = BukkitAdapter.adapt(e.getEntity());
-            aVictim.setMetadata("rpg-damage-data", data);
+            aVictim.setMetadata(RPG_DATA_KEY, data);
         } else {
             e.setCancelled(true);
+            aVictim.removeMetadata(RPG_DATA_KEY);
         }
     }
 
@@ -37,11 +37,12 @@ public class EntityDamageListener implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onApplyDamage(EntityDamageEvent e) {
         var aVictim = BukkitAdapter.adapt(e.getEntity());
-        if(!aVictim.hasMetadata("rpg-damage-data"))
+        if(!aVictim.hasMetadata(RPG_DATA_KEY))
             return;
 
-        var data = (RpgDamageData) aVictim.getMetadata("rpg-damage-data").get();
-        aVictim.removeMetadata("rpg-damage-data");
+        var data = (RpgDamageData) aVictim.getMetadata(RPG_DATA_KEY).get();
+        aVictim.removeMetadata(RPG_DATA_KEY);
+
         if(e.isCancelled())
             return;
 

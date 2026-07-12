@@ -1,28 +1,20 @@
 package me.vark123.dsrpg.rpgCombat.logic.calculators;
 
 import me.vark123.dsrpg.rpgCombat.logic.RpgDamageData;
-import me.vark123.dsrpg.rpgStats.statLogic.RpgEntityStatManager;
+import me.vark123.dsrpg.rpgStats.statLogic.RpgStatsHolder;
 import org.bukkit.entity.Entity;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.jspecify.annotations.Nullable;
 
-public class MagicCombatCalculator implements ICombatCalculator {
+public class MagicCombatCalculator extends ACombatCalculator {
 
-    private RpgEntityStatManager statManager;
-
-    public MagicCombatCalculator() {
-        statManager = RpgEntityStatManager.getInstance();
+    @Override
+    protected RpgDamageData calculateEntityDamage(EntityDamageEvent event, Entity attacker, Entity victim, RpgStatsHolder attackerStats, RpgStatsHolder victimStats) {
+        return new RpgDamageData((int) event.getDamage());
     }
 
     @Override
-    public RpgDamageData calculate(EntityDamageEvent event, @Nullable Entity attacker, @Nullable Entity victim) {
-        if(attacker != null) {
-            var attackerStats = statManager.getStats(attacker.getUniqueId());
-            var victimStats = statManager.getStats(victim.getUniqueId());
-        } else {
-
-        }
-
-        return new RpgDamageData(-1, false);
+    protected RpgDamageData calculateEnvironmentalDamage(EntityDamageEvent event, @Nullable Entity victim, RpgStatsHolder victimStats) {
+        return new RpgDamageData((int) event.getDamage());
     }
 }
