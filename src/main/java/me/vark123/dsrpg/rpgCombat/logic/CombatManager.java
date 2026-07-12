@@ -5,10 +5,11 @@ import me.vark123.dsrpg.rpgCombat.logic.calculators.ICombatCalculator;
 import me.vark123.dsrpg.rpgCombat.logic.calculators.MagicCombatCalculator;
 import me.vark123.dsrpg.rpgCombat.logic.calculators.MeleeCombatCalculator;
 import me.vark123.dsrpg.rpgCombat.logic.calculators.RangedCombatCalculator;
+import me.vark123.dsrpg.rpgCombat.events.CombatCritCalculateEvent;
 import me.vark123.dsrpg.rpgStats.statLogic.RpgEntityStatManager;
-import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
@@ -17,11 +18,13 @@ import org.bukkit.persistence.PersistentDataType;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 public final class CombatManager {
 
     private static RpgEntityStatManager statManager;
     private static final Map<RpgDamageType, ICombatCalculator> combatCalculators = new HashMap<>();
+    private static final Random rand  = new Random();
 
     private static final NamespacedKey WEAPON_TYPE_KEY = new NamespacedKey("dsrpg", "weapon-type");
     private static final NamespacedKey DAMAGE_KEY = new NamespacedKey("dsrpg", "damage");
@@ -100,6 +103,19 @@ public final class CombatManager {
         return RpgDamageType.CUSTOM;
     }
 
+    public static boolean checkCrit(
+            Entity attacker, Entity target,
+            EntityDamageByEntityEvent connectedEvent,
+            RpgDamageType damageType, RpgWeaponType weaponType
+    ) {
+        var event = new CombatCritCalculateEvent(attacker, target, 0, connectedEvent, damageType, weaponType);
+        Bukkit.getPluginManager().callEvent(event);
+
+        var chance = event.getChance();
+        var draw = rand.nextDouble();
+        return chance > draw;
+    }
+
     public static RpgDamageStatType resolveDamageStatType(EntityDamageEvent e, RpgDamageType damageType) {
         if (damageType.equals(RpgDamageType.CUSTOM))
             return RpgDamageStatType.BLUDGEONING;
@@ -118,15 +134,15 @@ public final class CombatManager {
                     return RpgDamageStatType.MAGIC;
                 }
             }
-        } else if(MythicBukkit.inst().getMobManager().isMythicMob(damager)) {
+        } else if (MythicBukkit.inst().getMobManager().isMythicMob(damager)) {
             var mob = MythicBukkit.inst().getMobManager().getMythicMobInstance(damager);
             var variables = mob.getVariables();
 
-            if(variables.has("damage-type")){
-                try{
+            if (variables.has("damage-type")) {
+                try {
                     var result = RpgDamageStatType.valueOf(variables.getString("damage-type").toUpperCase());
                     return result;
-                } catch(IllegalArgumentException ex){
+                } catch (IllegalArgumentException ex) {
                     return RpgDamageStatType.BLUDGEONING;
                 }
             }

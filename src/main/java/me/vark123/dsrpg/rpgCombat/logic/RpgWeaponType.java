@@ -6,52 +6,54 @@ import java.util.Map;
 
 @Getter
 public enum RpgWeaponType {
-    SWORD_1H(RpgDamageStatType.SLASHING, Map.of(
+    SWORD_1H(RpgDamageStatType.SLASHING, "crit_1h", Map.of(
             "str", 0.7,
             "zr", 0.3
     )),
-    DAGGER_1H(RpgDamageStatType.PIERCING, Map.of(
+    DAGGER_1H(RpgDamageStatType.PIERCING, "crit_1h", Map.of(
             "str", 0.3,
             "zr", 0.7
     )),
-    AXE_1H(RpgDamageStatType.SLASHING, Map.of(
+    AXE_1H(RpgDamageStatType.SLASHING, "crit_1h", Map.of(
             "str", 1.0
     )),
-    MACE_1H(RpgDamageStatType.BLUDGEONING, Map.of(
+    MACE_1H(RpgDamageStatType.BLUDGEONING, "crit_1h", Map.of(
             "str", 1.0
     )),
-    SWORD_2H(RpgDamageStatType.SLASHING, Map.of(
+    SWORD_2H(RpgDamageStatType.SLASHING, "crit_2h", Map.of(
             "str", 0.9,
             "zr", 0.1
     )),
-    AXE_2H(RpgDamageStatType.SLASHING, Map.of(
+    AXE_2H(RpgDamageStatType.SLASHING, "crit_2h", Map.of(
             "str", 1.0
     )),
-    HAMMER_2H(RpgDamageStatType.BLUDGEONING, Map.of(
+    HAMMER_2H(RpgDamageStatType.BLUDGEONING, "crit_2h", Map.of(
             "str", 1.0
     )),
-    STUFF_2H(RpgDamageStatType.BLUDGEONING, Map.of(
+    STAFF_2H(RpgDamageStatType.BLUDGEONING, "crit_staff", Map.of(
             "str", 0.5,
             "pwr", 0.3
     )),
-    SPEAR_2H(RpgDamageStatType.PIERCING, Map.of(
+    SPEAR_2H(RpgDamageStatType.PIERCING, "crit_2h", Map.of(
             "str", 0.2,
             "zr", 0.8
     )),
-    BOW(RpgDamageStatType.PIERCING, Map.of(
+    BOW(RpgDamageStatType.PIERCING, "crit_bow", Map.of(
             "zr", 1.0
     )),
-    CROSSBOW(RpgDamageStatType.PIERCING, Map.of(
+    CROSSBOW(RpgDamageStatType.PIERCING, "crit_crossbow", Map.of(
             "str", 0.5,
             "zr", 0.5
     )),
-    UNDEFINED(RpgDamageStatType.BLUDGEONING, Map.of());
+    UNDEFINED(RpgDamageStatType.BLUDGEONING, "", Map.of());
 
     private final RpgDamageStatType connectedStats;
     private final Map<String, Double> statProportions;
+    private final String critStat;
 
-    RpgWeaponType(RpgDamageStatType connectedStats, Map<String, Double> statProportions) {
+    RpgWeaponType(RpgDamageStatType connectedStats, String critStat, Map<String, Double> statProportions) {
         this.connectedStats = connectedStats;
+        this.critStat = critStat;
         this.statProportions = statProportions;
     }
 
@@ -75,7 +77,7 @@ public enum RpgWeaponType {
             case "2h_sword" -> SWORD_2H;
             case "2h_axe" -> AXE_2H;
             case "2h_hammer" -> HAMMER_2H;
-            case "2h_stuff" -> STUFF_2H;
+            case "2h_staff" -> STAFF_2H;
             case "2h_spear" -> SPEAR_2H;
             case "bow" -> BOW;
             case "crossbow" -> CROSSBOW;

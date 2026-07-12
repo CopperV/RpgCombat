@@ -9,6 +9,7 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.jspecify.annotations.Nullable;
 
@@ -23,11 +24,14 @@ public class MeleeCombatCalculator extends ACombatCalculator {
         double dmg = attackerStats.getStat(damageType.getDmgStat()).getTotalValue();
         var statSum = 0;
         double def = victimStats.getStat(damageType.getDefStat()).getTotalValue();
+        boolean isCrit = false;
 
         if (attacker instanceof Player player) {
             var weapon = player.getEquipment().getItemInMainHand();
             dmg += CombatManager.getWeaponDamage(weapon);
             statSum = calculateStatSum(attackerStats, weapon);
+
+            isCrit = CombatManager.checkCrit(attacker, victim, (EntityDamageByEntityEvent) event, RpgDamageType.MELEE, CombatManager.resolveWeaponType(weapon));
         } else {
             damageType = resolveMythicSkillDamageType(attacker, victim, damageType);
             if (damageType != CombatManager.resolveDamageStatType(event, RpgDamageType.MELEE)) {
@@ -36,9 +40,9 @@ public class MeleeCombatCalculator extends ACombatCalculator {
             }
         }
 
-        var calcDmg = (int) Math.max(Math.round((dmg + statSum - def) * NORMAL_DAMAGE_MODIFIER), MINIMUM_DAMAGE_VALUE);
-        Bukkit.broadcast(Component.text("Test10 MELEE " + dmg + " " + statSum + " " + def + " " + calcDmg));
-        return new RpgDamageData(calcDmg, false);
+        var dmgModifier = isCrit ? CRIT_DAMAGE_MODIFIER : NORMAL_DAMAGE_MODIFIER;
+        var calcDmg = (int) Math.max(Math.round((dmg + statSum - def) * dmgModifier), MINIMUM_DAMAGE_VALUE);
+        return new RpgDamageData(calcDmg, isCrit);
     }
 
     @Override
@@ -48,8 +52,6 @@ public class MeleeCombatCalculator extends ACombatCalculator {
         var def = victimStats.getStat(damageType.getDefStat()).getTotalValue();
 
         var calcDmg = (int) Math.max(Math.round((dmg - def) * NORMAL_DAMAGE_MODIFIER), MINIMUM_DAMAGE_VALUE);
-        Bukkit.broadcast(Component.text("Test11 MELEE " + dmg + " " + def + " " + calcDmg));
-
         return new RpgDamageData(calcDmg);
     }
 }
