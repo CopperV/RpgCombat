@@ -2,16 +2,15 @@ package me.vark123.dsrpg.rpgCombat.mmExtensions.mechanics;
 
 import io.lumine.mythic.api.config.MythicLineConfig;
 import io.lumine.mythic.api.skills.INoTargetSkill;
-import io.lumine.mythic.api.skills.Skill;
 import io.lumine.mythic.api.skills.SkillMetadata;
 import io.lumine.mythic.api.skills.SkillResult;
 import io.lumine.mythic.bukkit.MythicBukkit;
 import io.lumine.mythic.core.skills.SkillExecutor;
 import io.lumine.mythic.core.skills.SkillMechanic;
 import io.lumine.mythic.core.utils.annotations.MythicMechanic;
-import me.vark123.dsrpg.rpgCombat.logic.RpgDamageStatType;
-import net.kyori.adventure.text.Component;
-import org.bukkit.Bukkit;
+import me.vark123.dsrpg.rpgCombat.config.RpgCombatConfig;
+import me.vark123.dsrpg.rpgCombat.config.RpgCombatConfig.DamageTypeData;
+import me.vark123.dsrpg.rpgCombat.config.RpgCombatConstants;
 
 import java.io.File;
 
@@ -23,13 +22,13 @@ import java.io.File;
 )
 public class SetDefaultDamageTypeMechanic extends SkillMechanic implements INoTargetSkill {
 
-    private final RpgDamageStatType damageType;
+    private final DamageTypeData damageType;
 
     public SetDefaultDamageTypeMechanic(SkillExecutor manager, File file, String line, MythicLineConfig mlc) {
         super(manager, file, line, mlc);
 
         var damageTypeId = mlc.getString(new String[]{"damage-type", "type"}, "BLUDGEONING").toUpperCase();
-        damageType = RpgDamageStatType.valueOf(damageTypeId);
+        damageType = RpgCombatConfig.getInstance().getDamageTypeData(damageTypeId);
     }
 
     @Override
@@ -39,7 +38,7 @@ public class SetDefaultDamageTypeMechanic extends SkillMechanic implements INoTa
             return SkillResult.INVALID_TARGET;
 
         var mob = MythicBukkit.inst().getMobManager().getMythicMobInstance(caster);
-        mob.getVariables().putString("damage-type", damageType.name());
+        mob.getVariables().putString(RpgCombatConstants.MYTHICMOB_DAMAGE_TYPE_KEY, damageType.name());
 
         return SkillResult.SUCCESS;
     }

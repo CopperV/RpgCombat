@@ -1,0 +1,93 @@
+combat-settings:
+  minimum-damage: 1
+  ranged-max-spread-degrees:
+    x: 30
+    y: 10
+  damage-modifiers:
+    melee:
+      normal: 0.25
+      crit: 1
+    ranged:
+      normal: 0.25
+      crit: 1
+    magic:
+      normal: 0.25
+      crit: 1
+damage-types:
+  SLASHING:
+    dmg-stat: "dmg_slashing"
+    def-stat: "def_slashing"
+  BLUDGEONING:
+    dmg-stat: "dmg_bludgeoning"
+    def-stat: "def_bludgeoning"
+  PIERCING:
+    dmg-stat: "dmg_piercing"
+    def-stat: "def_piercing"
+  MAGIC:
+    dmg-stat: "dmg_magic"
+    def-stat: "def_magic"
+  FIRE:
+    dmg-stat: "dmg_fire"
+    def-stat: "def_fire"
+weapon-types:
+  1H_SWORD:
+    damage-type: SLASHING
+    crit-stat: "crit_1h"
+    stat-proportions:
+      str: 0.7
+      zr: 0.3
+  1H_DAGGER:
+    damage-type: PIERCING
+    crit-stat: "crit_1h"
+    stat-proportions:
+      str: 0.3
+      zr: 0.7
+  1H_AXE:
+    damage-type: SLASHING
+    crit-stat: "crit_1h"
+    stat-proportions:
+      str: 1
+  1H_MACE:
+    damage-type: BLUDGEONING
+    crit-stat: "crit_1h"
+    stat-proportions:
+      str: 1
+  2H_SWORD:
+    damage-type: SLASHING
+    crit-stat: "crit_2h"
+    stat-proportions:
+      str: 0.9
+      zr: 0.1
+  2H_AXE:
+    damage-type: SLASHING
+    crit-stat: "crit_2h"
+    stat-proportions:
+      str: 1
+  2H_HAMMER:
+    damage-type: BLUDGEONING
+    crit-stat: "crit_2h"
+    stat-proportions:
+      str: 1
+  2H_STAFF:
+    damage-type: BLUDGEONING
+    crit-stat: "crit_staff"
+    stat-proportions:
+      str: 0.5
+      pwr: 0.5
+  2H_SPEAR:
+    damage-type: PIERCING
+    crit-stat: "crit_2h"
+    stat-proportions:
+      str: 0.2
+      zr: 0.8
+  BOW:
+    damage-type: PIERCING
+    crit-stat: "crit_bow"
+    stat-proportions:
+      zr: 1
+  CROSSBOW:
+    damage-type: PIERCING
+    crit-stat: "crit_crossbow"
+    stat-proportions:
+      str: 0.5
+      zr: 0.5

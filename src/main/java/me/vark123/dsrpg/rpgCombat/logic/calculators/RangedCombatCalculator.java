@@ -1,11 +1,9 @@
 package me.vark123.dsrpg.rpgCombat.logic.calculators;
 
-import io.lumine.mythic.api.skills.damage.DamageMetadata;
 import io.lumine.mythic.bukkit.BukkitAdapter;
+import me.vark123.dsrpg.rpgCombat.config.RpgCombatConfig;
 import me.vark123.dsrpg.rpgCombat.logic.*;
 import me.vark123.dsrpg.rpgStats.statLogic.RpgStatsHolder;
-import net.kyori.adventure.text.Component;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -13,29 +11,30 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.inventory.ItemStack;
 import org.jspecify.annotations.Nullable;
 
-public class RangedCombatCalculator extends ACombatCalculator {
+import static me.vark123.dsrpg.rpgCombat.config.RpgCombatConstants.*;
 
-    protected static final double NORMAL_DAMAGE_MODIFIER = 0.25;
-    protected static final double CRIT_DAMAGE_MODIFIER = 1;
+public class RangedCombatCalculator extends ACombatCalculator {
 
     @Override
     protected RpgDamageData calculateEntityDamage(EntityDamageEvent event, Entity attacker, Entity victim, RpgStatsHolder attackerStats, RpgStatsHolder victimStats) {
+        var config = RpgCombatConfig.getInstance();
+
         var force = 1.0f;
         var projectile = event.getDamageSource().getDirectEntity();
         var aProjectile = BukkitAdapter.adapt(projectile);
-        if(aProjectile != null && aProjectile.hasMetadata("force")) {
-            force = (float) aProjectile.getMetadata("force").get();
+        if(aProjectile != null && aProjectile.hasMetadata(METADATA_BOW_FORCE_KEY)) {
+            force = (float) aProjectile.getMetadata(METADATA_BOW_FORCE_KEY).get();
         }
 
         var damageType = CombatManager.resolveDamageStatType(event, RpgDamageType.RANGED);
-        double dmg = attackerStats.getStat(damageType.getDmgStat()).getTotalValue();
+        double dmg = attackerStats.getStat(damageType.dmgStat()).getTotalValue();
         var statSum = 0;
-        double def = victimStats.getStat(damageType.getDefStat()).getTotalValue();
+        double def = victimStats.getStat(damageType.defStat()).getTotalValue();
         boolean isCrit = false;
 
         if (attacker instanceof Player player) {
-            if(aProjectile.hasMetadata("bow")){
-                ItemStack weapon = (ItemStack) aProjectile.getMetadata("bow").get();
+            if(aProjectile.hasMetadata(METADATA_BOW_ITEM_KEY)){
+                ItemStack weapon = (ItemStack) aProjectile.getMetadata(METADATA_BOW_ITEM_KEY).get();
                 dmg += CombatManager.getWeaponDamage(weapon);
                 statSum = calculateStatSum(attackerStats, weapon);
 
@@ -45,22 +44,26 @@ public class RangedCombatCalculator extends ACombatCalculator {
             damageType = resolveMythicSkillDamageType(attacker, victim, damageType);
             if (damageType != CombatManager.resolveDamageStatType(event, RpgDamageType.RANGED)) {
                 dmg = event.getDamage();
-                def = victimStats.getStat(damageType.getDefStat()).getTotalValue();
+                def = victimStats.getStat(damageType.defStat()).getTotalValue();
             }
         }
 
-        var dmgModifier = isCrit ? CRIT_DAMAGE_MODIFIER : NORMAL_DAMAGE_MODIFIER;
-        var calcDmg = (int) Math.max(Math.round(((dmg + statSum) * force - def) * dmgModifier), MINIMUM_DAMAGE_VALUE);
+        var dmgModifier = isCrit ?
+                config.getCritModifier(RpgDamageType.RANGED) :
+                config.getNormalModifier(RpgDamageType.RANGED);
+        var calcDmg = (int) Math.max(Math.round(((dmg + statSum) * force - def) * dmgModifier), config.getMinimumDamage());
         return new RpgDamageData(calcDmg, isCrit);
     }
 
     @Override
     protected RpgDamageData calculateEnvironmentalDamage(EntityDamageEvent event, @Nullable Entity victim, RpgStatsHolder victimStats) {
+        var config = RpgCombatConfig.getInstance();
+
         var damageType = CombatManager.resolveDamageStatType(event, RpgDamageType.CUSTOM);
         var dmg = event.getDamage();
-        var def = victimStats.getStat(damageType.getDefStat()).getTotalValue();
+        var def = victimStats.getStat(damageType.defStat()).getTotalValue();
 
-        var calcDmg = (int) Math.max(Math.round((dmg - def) * NORMAL_DAMAGE_MODIFIER), MINIMUM_DAMAGE_VALUE);
+        var calcDmg = (int) Math.max(Math.round((dmg - def) * config.getNormalModifier(RpgDamageType.RANGED)), config.getMinimumDamage());
         return new RpgDamageData(calcDmg);
     }
 }

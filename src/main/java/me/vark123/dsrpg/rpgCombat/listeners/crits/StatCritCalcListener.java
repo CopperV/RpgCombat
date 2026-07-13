@@ -14,7 +14,7 @@ public class StatCritCalcListener implements Listener {
         var stats = RpgEntityStatManager.getInstance().getStats(attacker.getUniqueId());
 
         var weaponType = e.getWeaponType();
-        var stat = stats.getStat(weaponType.getCritStat());
+        var stat = stats.getStat(weaponType.critStat());
         if(stat == null)
             return;
 

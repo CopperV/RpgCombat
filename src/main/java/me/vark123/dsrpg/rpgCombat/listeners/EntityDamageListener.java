@@ -1,6 +1,7 @@
 package me.vark123.dsrpg.rpgCombat.listeners;
 
 import io.lumine.mythic.bukkit.BukkitAdapter;
+import me.vark123.dsrpg.rpgCombat.config.RpgCombatConstants;
 import me.vark123.dsrpg.rpgCombat.logic.CombatManager;
 import me.vark123.dsrpg.rpgCombat.logic.RpgDamageData;
 import org.bukkit.Particle;
@@ -14,8 +15,6 @@ import org.bukkit.event.entity.EntityDamageEvent;
 
 public class EntityDamageListener implements Listener {
 
-    private static final String RPG_DATA_KEY = "rpg-damage-data";
-
     //Calculating
     @EventHandler(priority = EventPriority.HIGH)
     private void onDamage(EntityDamageEvent e) {
@@ -28,10 +27,10 @@ public class EntityDamageListener implements Listener {
 
         if(data.getDamage() > 0){
             e.setDamage(data.getDamage());
-            aVictim.setMetadata(RPG_DATA_KEY, data);
+            aVictim.setMetadata(RpgCombatConstants.METADATA_RPG_COMBAT_KEY, data);
         } else {
             e.setCancelled(true);
-            aVictim.removeMetadata(RPG_DATA_KEY);
+            aVictim.removeMetadata(RpgCombatConstants.METADATA_RPG_COMBAT_KEY);
         }
     }
 
@@ -39,10 +38,10 @@ public class EntityDamageListener implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onApplyDamage(EntityDamageEvent e) {
         var aVictim = BukkitAdapter.adapt(e.getEntity());
-        if(!aVictim.hasMetadata(RPG_DATA_KEY) || e.isCancelled())
+        if(!aVictim.hasMetadata(RpgCombatConstants.METADATA_RPG_COMBAT_KEY) || e.isCancelled())
             return;
 
-        var data = (RpgDamageData) aVictim.getMetadata(RPG_DATA_KEY).get();
+        var data = (RpgDamageData) aVictim.getMetadata(RpgCombatConstants.METADATA_RPG_COMBAT_KEY).get();
         e.setDamage(data.getDamage());
     }
 
@@ -51,11 +50,11 @@ public class EntityDamageListener implements Listener {
     private void onApplyEffects(EntityDamageByEntityEvent e) {
         var victim = e.getEntity();
         var aVictim = BukkitAdapter.adapt(victim);
-        if(!aVictim.hasMetadata(RPG_DATA_KEY))
+        if(!aVictim.hasMetadata(RpgCombatConstants.METADATA_RPG_COMBAT_KEY))
             return;
 
-        var data = (RpgDamageData) aVictim.getMetadata(RPG_DATA_KEY).get();
-        aVictim.removeMetadata(RPG_DATA_KEY);
+        var data = (RpgDamageData) aVictim.getMetadata(RpgCombatConstants.METADATA_RPG_COMBAT_KEY).get();
+        aVictim.removeMetadata(RpgCombatConstants.METADATA_RPG_COMBAT_KEY);
 
         if(e.isCancelled())
             return;

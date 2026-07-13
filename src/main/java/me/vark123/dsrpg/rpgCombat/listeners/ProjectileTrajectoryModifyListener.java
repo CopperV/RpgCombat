@@ -1,7 +1,7 @@
 package me.vark123.dsrpg.rpgCombat.listeners;
 
+import me.vark123.dsrpg.rpgCombat.config.RpgCombatConfig;
 import me.vark123.dsrpg.rpgCombat.logic.CombatManager;
-import me.vark123.dsrpg.rpgCombat.logic.RpgWeaponType;
 import me.vark123.dsrpg.rpgStats.statLogic.RpgEntityStatManager;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -15,22 +15,24 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class ProjectileTrajectoryModifyListener implements Listener {
 
-    private static final double MAX_SPREAD_DEGREES_X = 30.0;
-    private static final double MAX_SPREAD_DEGREES_Y = 10.0;
-
     @EventHandler(priority = EventPriority.HIGH)
     private void onShoot(EntityShootBowEvent e) {
         if (e.isCancelled() || !(e.getEntity() instanceof Player player))
             return;
 
+        if(player.isOp())
+            return;
+
+        var config = RpgCombatConfig.getInstance();
+
         var stats = RpgEntityStatManager.getInstance().getStats(player.getUniqueId());
         var weapon = e.getBow();
         var weaponType = CombatManager.resolveWeaponType(weapon);
 
-        if (weaponType == RpgWeaponType.UNDEFINED)
+        if (weaponType.equals(config.getUndefinedWeaponType()))
             return;
 
-        var stat = stats.getStat(weaponType.getCritStat());
+        var stat = stats.getStat(weaponType.critStat());
         if (stat == null)
             return;
 
@@ -40,8 +42,8 @@ public class ProjectileTrajectoryModifyListener implements Listener {
         if (masteryRatio >= 1.0)
             return;
 
-        double maxSpreadX = MAX_SPREAD_DEGREES_X * (1.0 - masteryRatio);
-        double maxSpreadY = MAX_SPREAD_DEGREES_Y * (1.0 - masteryRatio);
+        double maxSpreadX = config.getRangedMaxSpreadDegreesX() * (1.0 - masteryRatio);
+        double maxSpreadY = config.getRangedMaxSpreadDegreesY() * (1.0 - masteryRatio);
         var velocity = e.getProjectile().getVelocity();
         var speed = velocity.length();
 

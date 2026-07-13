@@ -1,6 +1,7 @@
 package me.vark123.dsrpg.rpgCombat;
 
 import lombok.Getter;
+import me.vark123.dsrpg.rpgCombat.config.RpgCombatConfig;
 import me.vark123.dsrpg.rpgCombat.listeners.EntityDamageListener;
 import me.vark123.dsrpg.rpgCombat.listeners.ProjectileLaunchListener;
 import me.vark123.dsrpg.rpgCombat.listeners.ProjectileTrajectoryModifyListener;
@@ -27,6 +28,7 @@ public final class RpgCombat extends JavaPlugin {
 
     private void initialize() {
         instance = this;
+        RpgCombatConfig.load(this);
     }
 
     private void registerListeners() {

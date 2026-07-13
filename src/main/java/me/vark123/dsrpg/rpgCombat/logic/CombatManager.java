@@ -1,14 +1,16 @@
 package me.vark123.dsrpg.rpgCombat.logic;
 
 import io.lumine.mythic.bukkit.MythicBukkit;
+import me.vark123.dsrpg.rpgCombat.config.RpgCombatConfig;
+import me.vark123.dsrpg.rpgCombat.config.RpgCombatConfig.DamageTypeData;
+import me.vark123.dsrpg.rpgCombat.config.RpgCombatConfig.WeaponTypeData;
+import me.vark123.dsrpg.rpgCombat.config.RpgCombatConstants;
 import me.vark123.dsrpg.rpgCombat.logic.calculators.ICombatCalculator;
 import me.vark123.dsrpg.rpgCombat.logic.calculators.MagicCombatCalculator;
 import me.vark123.dsrpg.rpgCombat.logic.calculators.MeleeCombatCalculator;
 import me.vark123.dsrpg.rpgCombat.logic.calculators.RangedCombatCalculator;
 import me.vark123.dsrpg.rpgCombat.events.CombatCritCalculateEvent;
-import me.vark123.dsrpg.rpgStats.statLogic.RpgEntityStatManager;
 import org.bukkit.Bukkit;
-import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -22,15 +24,10 @@ import java.util.Random;
 
 public final class CombatManager {
 
-    private static RpgEntityStatManager statManager;
     private static final Map<RpgDamageType, ICombatCalculator> combatCalculators = new HashMap<>();
     private static final Random rand  = new Random();
 
-    private static final NamespacedKey WEAPON_TYPE_KEY = new NamespacedKey("dsrpg", "weapon-type");
-    private static final NamespacedKey DAMAGE_KEY = new NamespacedKey("dsrpg", "damage");
-
     static {
-        statManager = RpgEntityStatManager.getInstance();
         combatCalculators.put(RpgDamageType.MELEE, new MeleeCombatCalculator());
         combatCalculators.put(RpgDamageType.RANGED, new RangedCombatCalculator());
         combatCalculators.put(RpgDamageType.MAGIC, new MagicCombatCalculator());
@@ -58,21 +55,23 @@ public final class CombatManager {
         return calculator.calculate(e, damager, victim);
     }
 
-    public static RpgWeaponType resolveWeaponType(ItemStack item) {
+    public static WeaponTypeData resolveWeaponType(ItemStack item) {
+        var config = RpgCombatConfig.getInstance();
+
         if (item == null)
-            return RpgWeaponType.UNDEFINED;
+            return config.getUndefinedWeaponType();
 
         if (!MythicBukkit.inst().getItemManager().isMythicItem(item) || !item.hasItemMeta())
-            return RpgWeaponType.UNDEFINED;
+            return config.getUndefinedWeaponType();
 
         var meta = item.getItemMeta();
         var pdc = meta.getPersistentDataContainer();
 
-        if (!pdc.has(WEAPON_TYPE_KEY, PersistentDataType.STRING))
-            return RpgWeaponType.UNDEFINED;
+        if (!pdc.has(RpgCombatConstants.WEAPON_TYPE_KEY, PersistentDataType.STRING))
+            return config.getUndefinedWeaponType();
 
-        var itemTypeId = pdc.get(WEAPON_TYPE_KEY, PersistentDataType.STRING);
-        return RpgWeaponType.fromString(itemTypeId);
+        var itemTypeId = pdc.get(RpgCombatConstants.WEAPON_TYPE_KEY, PersistentDataType.STRING);
+        return config.getWeaponTypeData(itemTypeId);
     }
 
     public static int getWeaponDamage(ItemStack item) {
@@ -85,10 +84,10 @@ public final class CombatManager {
         var meta = item.getItemMeta();
         var pdc = meta.getPersistentDataContainer();
 
-        if (!pdc.has(DAMAGE_KEY, PersistentDataType.INTEGER))
+        if (!pdc.has(RpgCombatConstants.DAMAGE_KEY, PersistentDataType.INTEGER))
             return 0;
 
-        return pdc.get(DAMAGE_KEY, PersistentDataType.INTEGER);
+        return pdc.get(RpgCombatConstants.DAMAGE_KEY, PersistentDataType.INTEGER);
     }
 
     public static RpgDamageType resolveDamageType(EntityDamageEvent e) {
@@ -106,7 +105,7 @@ public final class CombatManager {
     public static boolean checkCrit(
             Entity attacker, Entity target,
             EntityDamageByEntityEvent connectedEvent,
-            RpgDamageType damageType, RpgWeaponType weaponType
+            RpgDamageType damageType, WeaponTypeData weaponType
     ) {
         var event = new CombatCritCalculateEvent(attacker, target, 0, connectedEvent, damageType, weaponType);
         Bukkit.getPluginManager().callEvent(event);
@@ -116,41 +115,38 @@ public final class CombatManager {
         return chance > draw;
     }
 
-    public static RpgDamageStatType resolveDamageStatType(EntityDamageEvent e, RpgDamageType damageType) {
+    public static DamageTypeData resolveDamageStatType(EntityDamageEvent e, RpgDamageType damageType) {
+        var config = RpgCombatConfig.getInstance();
+
         if (damageType.equals(RpgDamageType.CUSTOM))
-            return RpgDamageStatType.BLUDGEONING;
+            return config.getDamageTypeData("");
 
         var damager = e.getDamageSource().getCausingEntity();
         if (damager instanceof Player player) {
             switch (damageType) {
                 case MELEE -> {
                     var weapon = player.getInventory().getItemInMainHand();
-                    return resolveWeaponType(weapon).getConnectedStats();
+                    return config.getDamageTypeData(resolveWeaponType(weapon).damageType());
                 }
                 case RANGED -> {
-                    return RpgDamageStatType.PIERCING;
+                    return config.getDamageTypeData("PIERCING");
                 }
                 case MAGIC -> {
-                    return RpgDamageStatType.MAGIC;
+                    return config.getDamageTypeData("MAGIC");
                 }
             }
         } else if (MythicBukkit.inst().getMobManager().isMythicMob(damager)) {
             var mob = MythicBukkit.inst().getMobManager().getMythicMobInstance(damager);
             var variables = mob.getVariables();
 
-            if (variables.has("damage-type")) {
-                try {
-                    var result = RpgDamageStatType.valueOf(variables.getString("damage-type").toUpperCase());
-                    return result;
-                } catch (IllegalArgumentException ex) {
-                    return RpgDamageStatType.BLUDGEONING;
-                }
+            if (variables.has(RpgCombatConstants.MYTHICMOB_DAMAGE_TYPE_KEY)) {
+                return config.getDamageTypeData(variables.getString(RpgCombatConstants.MYTHICMOB_DAMAGE_TYPE_KEY));
             }
         } else {
-            return RpgDamageStatType.BLUDGEONING;
+            return config.getDamageTypeData("");
         }
 
-        return RpgDamageStatType.BLUDGEONING;
+        return config.getDamageTypeData("");
     }
 
 }

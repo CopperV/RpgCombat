@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import me.vark123.dsrpg.rpgCombat.logic.RpgDamageType;
-import me.vark123.dsrpg.rpgCombat.logic.RpgWeaponType;
+import me.vark123.dsrpg.rpgCombat.config.RpgCombatConfig.WeaponTypeData;
 import org.bukkit.entity.Entity;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
@@ -25,7 +25,7 @@ public class CombatCritCalculateEvent extends Event {
     private EntityDamageByEntityEvent event;
 
     private RpgDamageType damageType;
-    private RpgWeaponType weaponType;
+    private WeaponTypeData weaponType;
 
     public void addChance(double chance) {
         this.chance += chance;

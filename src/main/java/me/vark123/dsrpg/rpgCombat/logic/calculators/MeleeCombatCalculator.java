@@ -1,9 +1,7 @@
 package me.vark123.dsrpg.rpgCombat.logic.calculators;
 
-import io.lumine.mythic.api.skills.damage.DamageMetadata;
-import io.lumine.mythic.bukkit.BukkitAdapter;
+import me.vark123.dsrpg.rpgCombat.config.RpgCombatConfig;
 import me.vark123.dsrpg.rpgCombat.logic.*;
-import me.vark123.dsrpg.rpgStats.statLogic.RpgEntityStatManager;
 import me.vark123.dsrpg.rpgStats.statLogic.RpgStatsHolder;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
@@ -15,15 +13,14 @@ import org.jspecify.annotations.Nullable;
 
 public class MeleeCombatCalculator extends ACombatCalculator {
 
-    protected static final double NORMAL_DAMAGE_MODIFIER = 0.25;
-    protected static final double CRIT_DAMAGE_MODIFIER = 1;
-
     @Override
     protected RpgDamageData calculateEntityDamage(EntityDamageEvent event, Entity attacker, Entity victim, RpgStatsHolder attackerStats, RpgStatsHolder victimStats) {
+        var config = RpgCombatConfig.getInstance();
+
         var damageType = CombatManager.resolveDamageStatType(event, RpgDamageType.MELEE);
-        double dmg = attackerStats.getStat(damageType.getDmgStat()).getTotalValue();
+        double dmg = attackerStats.getStat(damageType.dmgStat()).getTotalValue();
         var statSum = 0;
-        double def = victimStats.getStat(damageType.getDefStat()).getTotalValue();
+        double def = victimStats.getStat(damageType.defStat()).getTotalValue();
         boolean isCrit = false;
 
         if (attacker instanceof Player player) {
@@ -36,22 +33,26 @@ public class MeleeCombatCalculator extends ACombatCalculator {
             damageType = resolveMythicSkillDamageType(attacker, victim, damageType);
             if (damageType != CombatManager.resolveDamageStatType(event, RpgDamageType.MELEE)) {
                 dmg = event.getDamage();
-                def = victimStats.getStat(damageType.getDefStat()).getTotalValue();
+                def = victimStats.getStat(damageType.defStat()).getTotalValue();
             }
         }
 
-        var dmgModifier = isCrit ? CRIT_DAMAGE_MODIFIER : NORMAL_DAMAGE_MODIFIER;
-        var calcDmg = (int) Math.max(Math.round((dmg + statSum - def) * dmgModifier), MINIMUM_DAMAGE_VALUE);
+        var dmgModifier = isCrit ?
+                config.getCritModifier(RpgDamageType.MELEE) :
+                config.getNormalModifier(RpgDamageType.MELEE);
+        var calcDmg = (int) Math.max(Math.round((dmg + statSum - def) * dmgModifier), config.getMinimumDamage());
         return new RpgDamageData(calcDmg, isCrit);
     }
 
     @Override
     protected RpgDamageData calculateEnvironmentalDamage(EntityDamageEvent event, @Nullable Entity victim, RpgStatsHolder victimStats) {
+        var config = RpgCombatConfig.getInstance();
+
         var damageType = CombatManager.resolveDamageStatType(event, RpgDamageType.CUSTOM);
         var dmg = event.getDamage();
-        var def = victimStats.getStat(damageType.getDefStat()).getTotalValue();
+        var def = victimStats.getStat(damageType.defStat()).getTotalValue();
 
-        var calcDmg = (int) Math.max(Math.round((dmg - def) * NORMAL_DAMAGE_MODIFIER), MINIMUM_DAMAGE_VALUE);
+        var calcDmg = (int) Math.max(Math.round((dmg - def) * config.getNormalModifier(RpgDamageType.MELEE)), config.getMinimumDamage());
         return new RpgDamageData(calcDmg);
     }
 }
